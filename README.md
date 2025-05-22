@@ -1,121 +1,117 @@
-# 数据图表代码生成 Agent
+# 备注
+核心代码：
+- vllm_start.sh 启动 vllm 服务，在跑 LangGraph 的系统前，需要启动 vllm 服务，也就是本地部署的大模型。可以看作是 Ollama 的替代品。
+- chart_coder_agent.py 是核心代码，定义了多智能体系统中的各个智能体，包括代码生成智能体、视觉智能体和代码执行智能体。
 
-我想实现一个基于 LangGraph 的 Multi-agent 的系统去完成数据图表代码生成任务，输入是数据图表和 prompt，输出是画出图表的 python 代码。这个系统主要包括一个代码生成的 VLM 和一个负责提供 feedback 的 LLM，然后 multi-turn 地循环直到限定次数或满足条件。
 
-我使用的 LLM 是满足 OpenAI API 标准的 Qwen2.5-VL-32B-Instruct，如下，但不支持 function calling。
-```
-    llm = ChatOpenAI(
-        api_key="xxx",  # guiji
-        model="Qwen/Qwen2.5-VL-32B-Instruct",
+# MultiTurnChartCoder (下面是 Cursor 自动生成的，可以大致看看)
 
-        base_url="http://35.220.164.252:3888/v1",
-        temperature=0,
-        max_tokens=None,
-        timeout=None,
-        # max_retries=2,
-        # organization="...",
-        # other params...
-    )
-```
-
-初步的设计思路如下：
-- Code Agent (VLM): 使用 LangChain 的多模态 LLM 接口（如 ChatOpenAI with gpt-4-vision-preview 或其他 VLM 封装）作为 Code Agent。它的输入是用户查询和上一轮的反馈（如果有）。
-- Visual Agent (LLM): 使用一个标准的 LLM（如 ChatOpenAI with gpt-4）作为 Visual Agent。它的任务是接收 Code Agent 生成的代码。
-- Code Execution Tool: 创建一个 LangChain Tool，它使用 Python REPL (或更安全的沙箱环境) 来执行代码，并捕获生成的图表（可以保存为文件或 base64 编码）和任何错误。
-- Visual Agent Logic: Visual Agent 调用 Code Execution Tool。如果成功生成图表，它可以（理想情况下，如果它也是 VLM）"查看"图表并结合 "Principles" 给出反馈。如果它只是 LLM，它可以分析代码结构、参数，或依赖于图表的文本描述（如果能生成）来提供反馈。
-- LangGraph State: 定义一个状态对象，包含当前代码、生成的图表路径/数据、反馈历史、迭代次数等。
-- Loop: 使用 LangGraph 定义节点（Code Generation, Code Execution & Visual Analysis, Feedback Generation）和边，实现循环，直到满足退出条件（如最大迭代次数、Visual Agent 判断满意）。
-
-## 项目结构
-
-- `chart_coder_agent.py`: 主要的代码生成系统实现
-- `test_chart_coder.py`: 测试脚本
-- `requirements.txt`: 项目依赖
+基于 LangGraph 的多智能体数据图表代码生成系统。该系统通过多轮交互的方式，结合视觉语言模型（VLM）和大语言模型（LLM）来生成高质量的数据可视化代码。
 
 ## 系统架构
 
-该系统基于LangGraph实现多智能体交互：
+系统由以下核心组件构成：
 
-1. **Code Agent (VLM)**: 使用多模态大语言模型生成图表代码
-2. **Visual Agent (LLM)**: 分析代码和执行结果，提供反馈
-3. **代码执行工具**: 执行生成的代码，捕获图表输出
+1. **Code Agent (VLM)**
+   - 使用 Qwen2.5-VL-32B-Instruct 作为视觉语言模型
+   - 负责根据用户输入和反馈生成图表代码
+   - 支持多模态输入（文本描述和参考图像）
 
-系统工作流程：
+2. **Visual Agent (LLM)**
+   - 分析生成的代码和执行结果
+   - 提供改进建议和反馈
+   - 确保图表符合最佳实践
+
+3. **代码执行环境**
+   - 安全的代码执行沙箱
+   - 实时图表生成和验证
+   - 错误捕获和处理
+
+## 项目结构
+
 ```
-用户输入 → Code Agent生成代码 → 代码执行 → Visual Agent提供反馈 → 迭代改进 → 最终代码输出
+.
+├── chart_coder_agent.py    # 核心实现代码
+├── utils/                  # 工具函数
+├── figs/                   # 生成的图表存储
+├── requirements.txt        # 项目依赖
+└── vllm_start.sh          # VLLM 服务启动脚本
 ```
 
-## 安装与使用
+## 环境要求
 
-### 安装依赖
+- Python 3.8+
+- CUDA 支持（用于 VLM 推理）
+- 足够的 GPU 内存（建议 32GB+）
 
+## 安装
+
+1. 克隆仓库：
+```bash
+git clone https://github.com/yourusername/MultiTurnChartCoder.git
+cd MultiTurnChartCoder
+```
+
+2. 安装依赖：
 ```bash
 pip install -r requirements.txt
 ```
 
-### 配置API
+## 配置
 
-1. 创建`.env`文件，包含以下内容：
-```
-OPENAI_API_KEY=你的API密钥
-OPENAI_BASE_URL=http://35.220.164.252:3888/v1
-MAX_ITERATIONS=3  # 最大迭代次数
-TEMPERATURE=0     # 生成的随机性
-```
-
-### 命令行使用
-
-系统提供了简单的命令行界面：
-
+1. 创建 `.env` 文件：
 ```bash
-# 基本用法
-python chart_coder_cli.py "生成一个散点图，展示x和y两个变量之间的关系，并添加趋势线"
-
-# 使用参考图像
-python chart_coder_cli.py "根据这个图片生成类似的图表" --image reference.png
-
-# 显示反馈历史
-python chart_coder_cli.py "生成一个柱状图" --show-feedback
-
-# 指定输出路径和保存代码
-python chart_coder_cli.py "生成一个折线图" --output myfigure.png --save-code chart_code.py
-
-# 交互式模式
-python chart_coder_cli.py --interactive
+OPENAI_API_KEY=your_api_key
+OPENAI_BASE_URL=http://your_api_base_url
+MAX_ITERATIONS=3
+TEMPERATURE=0
 ```
 
-### 运行测试
-
+2. 启动 VLLM 服务：
 ```bash
-python test_chart_coder.py
+bash vllm_start.sh
 ```
 
-### 在代码中使用
+## 使用示例
 
 ```python
 from chart_coder_agent import generate_chart_code
 
-# 生成简单图表代码
-result = generate_chart_code("生成一个散点图，展示x和y两个变量之间的关系，并添加趋势线")
+# 基本使用
+result = generate_chart_code(
+    prompt="生成一个散点图，展示x和y两个变量之间的关系，并添加趋势线"
+)
 
-# 查看生成的代码
-print(result["code"])
+# 使用参考图像
+result = generate_chart_code(
+    prompt="根据这个图片生成类似的图表",
+    reference_image="path/to/image.png"
+)
 
-# 获取生成的图表（如果成功）
-if result.get("image_data"):
-    with open("chart.png", "wb") as f:
-        f.write(base64.b64decode(result["image_data"]))
-
-# 查看反馈历史
-print(result["feedback"])
+# 获取结果
+print(result["code"])  # 生成的代码
+print(result["feedback"])  # 反馈历史
 ```
 
-## 扩展与改进
+## 开发计划
 
-- 支持更多图表类型
-- 添加更多评估指标
-- 支持更复杂的数据输入
-- 优化代码执行安全性
+- [ ] 支持更多图表类型
+- [ ] 添加代码质量评估
+- [ ] 优化多轮对话策略
+- [ ] 增加更多数据源支持
+- [ ] 改进错误处理机制
+
+## 贡献指南
+
+欢迎提交 Issue 和 Pull Request！
+
+## 许可证
+
+MIT License
+
+## 备注
+
+<!-- 在这里添加您的个人备注 -->
 
 
 

@@ -1,0 +1,1 @@
+vllm serve /home/hdh/github_projects/cmr_benchmark/8_models_checkpoints/model_checkpoints/Qwen/Qwen25_VL_32B_INSTRUCT --served-model-name  Qwen25_VL --tensor-parallel-size 8

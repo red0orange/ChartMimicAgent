@@ -21,6 +21,7 @@ from pdf2image import convert_from_path
 import io
 
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import Tool
 from langgraph.graph import END, StateGraph
@@ -133,7 +134,7 @@ code_execution_tool = Tool(
 )
 
 # 设置Code Agent (VLM)
-def create_code_agent():
+def create_code_agent_api():
     """创建代码生成智能体"""
     llm = ChatOpenAI(
         model="Qwen/Qwen2.5-VL-32B-Instruct",
@@ -141,6 +142,29 @@ def create_code_agent():
         temperature=TEMPERATURE,
     )
     
+    return llm
+
+def create_code_agent_ollama():
+    """创建代码生成智能体"""
+    llm = ChatOllama(
+        model="qwen2.5vl:32b",
+    )
+    return llm
+
+def create_code_agent_vllm():
+    """创建代码生成智能体"""
+    llm = ChatOpenAI(
+        model="Qwen25_VL",
+        api_key="dummy",
+        base_url="http://localhost:8000/v1",
+    )
+    return llm
+
+def create_code_agent():
+    """创建代码生成智能体"""
+    # llm = create_code_agent_ollama()
+    # llm = create_code_agent_api()
+    llm = create_code_agent_vllm()
     return llm
 
 # 设置Visual Agent (LLM)

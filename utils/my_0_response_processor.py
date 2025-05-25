@@ -91,7 +91,7 @@ def execute_llm_code(code, output_dir):
     return success, output_pdf_file, output_png_file, err_msg
 
 
-def process_and_execute_code(code, model_type="qwen", variable_code=None):
+def process_and_execute_code(code, process=True):
     """
     处理并执行代码
     
@@ -108,12 +108,8 @@ def process_and_execute_code(code, model_type="qwen", variable_code=None):
     output_file = f"temp_{random_filename}.py"
     
     # 首先处理LLM响应
-    code = process_llm_response(code, model_type)
-    
-    # 添加变量代码（如果提供）
-    if variable_code:
-        variable_code = variable_code.replace("\n", "\n    ")
-        code = variable_code + "\n    " + code
+    if process:
+        code = process_llm_response(code)
     
     # 为代码添加适当的缩进
     indented_code = '\n    '.join(code.strip().split('\n'))

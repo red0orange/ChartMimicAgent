@@ -28,15 +28,16 @@ from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 
+from chartmimic_benchmark import ChartMimicBenchmark
 from utils.my_0_response_processor import process_llm_response, execute_llm_code
 
 cur_file_dir = os.path.dirname(os.path.abspath(__file__))
 
 # langsmith
-os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_API_KEY"] = "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"
-os.environ["LANGSMITH_ENDPOINT"] = "https://api.smith.langchain.com"
-os.environ["LANGSMITH_PROJECT"] = "tutor"
+# os.environ["LANGSMITH_TRACING"] = "true"
+# os.environ["LANGSMITH_API_KEY"] = "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"
+# os.environ["LANGSMITH_ENDPOINT"] = "https://api.smith.langchain.com"
+# os.environ["LANGSMITH_PROJECT"] = "tutor"
 
 # 加载环境变量(如果存在.env文件)
 try:
@@ -184,8 +185,7 @@ def code_generation(state: ChartCoderState) -> ChartCoderState:
     code_agent = create_code_agent()
     
     # 构建系统消息
-    # system_message = """你是一位专业的数据图表代码生成助手。根据提供的参考图表图片和用户的要求，生成的绘制图表的 Python 代码。使用matplotlib、pandas 和 numpy 库。"""
-    system_message = """You are a professional data chart code generation assistant. According to the provided reference chart images and user requirements, generate Python code to draw charts. Use matplotlib, pandas and numpy libraries."""
+    system_message = """"""
     
     # 如果是第一次迭代，添加系统消息和初始用户消息
     if state["iterations"] == 0:
@@ -367,7 +367,10 @@ chart_coder_app = build_chart_coder_graph()
 def generate_chart_code(user_input: str, image_path: str, max_iterations: int = MAX_ITERATIONS):
     """生成图表代码的主函数"""
     # 初始化状态
-    image_data_base64 = image_path_to_base64(image_path)
+    if isinstance(image_path, str):
+        image_data_base64 = image_path_to_base64(image_path)
+    else:
+        image_data_base64 = image_to_base64(image_path)
     initial_state: ChartCoderState = {
         "user_input": user_input,
         "image_data_base64": image_data_base64,
@@ -381,6 +384,10 @@ def generate_chart_code(user_input: str, image_path: str, max_iterations: int = 
     
     # 执行工作流
     result = chart_coder_app.invoke(initial_state)
+
+    # 把 system_message 都提取出来
+    for i in range(len(result["messages"])):
+        result["messages"][i] = result["messages"][i].content
     
     return result
 
@@ -404,11 +411,16 @@ def pdf_to_png(pdf_path: str) -> str:
         raise Exception(f"PDF 转换失败: {str(e)}")
 
 if __name__ == "__main__":
-    # 示例用法
-    user_query = "You are an expert Python developer who specializes in writing matplotlib code based on a given picture. I found a very nice picture in a STEM paper, but there is no corresponding source code available. I need your help to generate the Python code that can reproduce the picture based on the picture I provide.\nNote that it is necessary to use figsize=(7.0, 7.0) to set the image size to match the original size.\nNow, please give me the matplotlib code that reproduces the picture below"
-    image_path = "/home/hdh/github_projects/cmr_benchmark/9_thanks_methods/ChartPlotRL/dataset/ori_500/3d_1.png"
-    result = generate_chart_code(user_query, image_path=image_path)
-    
+    chart_mimic_benchmark = ChartMimicBenchmark()
+    dataset = chart_mimic_benchmark.get_dataset()
+
+    for data in dataset:
+        image = data["images"][0]
+        user_query = data["problem"]
+        gt_code = data["answer"]
+
+        result = generate_chart_code(user_query, image_path=image)
+        
     print(f"生成的代码:\n{result['code']}")
     print(f"迭代次数: {result['iterations']}")
     print(f"反馈历史:\n{result['feedback']}")

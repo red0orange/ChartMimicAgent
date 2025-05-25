@@ -9,7 +9,7 @@ import uuid
 
 import matplotlib.pyplot as plt
 
-def evaluate_layout_matching(generation_code: str, golden_code: str) -> Dict[str, float]:
+def evaluate_layout_matching(generation_code: str, golden_code: str, temp_save_dir_name: str = None) -> Dict[str, float]:
     """评估生成的图表代码和标准代码之间的布局匹配程度
     
     Args:
@@ -31,8 +31,15 @@ def evaluate_layout_matching(generation_code: str, golden_code: str) -> Dict[str
     generation_code = add_delete_file_after_savefig(generation_code)
     golden_code = add_delete_file_after_savefig(golden_code)
 
-    generation_code_temp_file = "temp_{}.py".format(str(uuid.uuid4())[:8])
-    golden_code_temp_file = "temp_{}.py".format(str(uuid.uuid4())[:8])
+    if temp_save_dir_name is None:
+        temp_save_dir = os.environ["PROJECT_PATH"]
+    else:
+        temp_save_dir = os.path.join(os.environ["PROJECT_PATH"], temp_save_dir_name)
+    os.makedirs(temp_save_dir, exist_ok=True)
+
+    generation_code_temp_file = os.path.join(temp_save_dir, "temp_{}.py".format(str(uuid.uuid4())[:8]))
+    golden_code_temp_file = os.path.join(temp_save_dir, "temp_{}.py".format(str(uuid.uuid4())[:8]))
+
     with open(generation_code_temp_file, 'w') as f:
         f.write(generation_code)
     with open(golden_code_temp_file, 'w') as f:
@@ -103,7 +110,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 import os
 import sys
-lib_path = os.path.join(os.environ["PROJECT_PATH"], "examples/reward_function/chartmimic_evaluator")
+lib_path = os.path.join(os.environ["PROJECT_PATH"], "utils")
 sys.path.insert(0, lib_path)
 """
     

@@ -4,13 +4,14 @@ load_dotenv()
 
 import os
 import sys
+import numpy as np
 
 import matplotlib.pyplot as plt
 import re
 import uuid
 
 
-def evaluate_legend_matching(generation_code: str, golden_code: str, use_position: bool = True) -> Dict[str, float]:
+def evaluate_legend_matching(generation_code: str, golden_code: str, use_position: bool = True, temp_save_dir_name: str = None) -> Dict[str, float]:
     """评估生成的图表代码和标准代码之间的图例匹配程度
     
     Args:
@@ -32,8 +33,14 @@ def evaluate_legend_matching(generation_code: str, golden_code: str, use_positio
     generation_code = add_delete_file_after_savefig(generation_code)
     golden_code = add_delete_file_after_savefig(golden_code)
     
-    generation_code_temp_file = "temp_{}.py".format(str(uuid.uuid4())[:8])
-    golden_code_temp_file = "temp_{}.py".format(str(uuid.uuid4())[:8])
+    if temp_save_dir_name is None:
+        temp_save_dir = os.environ["PROJECT_PATH"]
+    else:
+        temp_save_dir = os.path.join(os.environ["PROJECT_PATH"], temp_save_dir_name)
+    os.makedirs(temp_save_dir, exist_ok=True)
+
+    generation_code_temp_file = os.path.join(temp_save_dir, "temp_{}.py".format(str(uuid.uuid4())[:8]))
+    golden_code_temp_file = os.path.join(temp_save_dir, "temp_{}.py".format(str(uuid.uuid4())[:8]))
     with open(generation_code_temp_file, 'w') as f:
         f.write(generation_code)
     with open(golden_code_temp_file, 'w') as f:
@@ -56,12 +63,15 @@ def evaluate_legend_matching(generation_code: str, golden_code: str, use_positio
         
         os.system(f"python3 {code_log_texts_file}")
 
-        with open(output_file, 'r') as f:
-            texts = f.read()
-            texts = eval(texts)
+        if os.path.exists(output_file):
+            with open(output_file, 'r') as f:
+                texts = f.read()
+                texts = eval(texts)
+            os.remove(output_file)
+        else:
+            texts = []
 
         os.remove(code_log_texts_file)
-        os.remove(output_file)
         
         return texts
 
@@ -117,7 +127,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 import os
 import sys
-lib_path = os.path.join(os.environ["PROJECT_PATH"], "examples/reward_function/chartmimic_evaluator")
+lib_path = os.path.join(os.environ["PROJECT_PATH"], "utils")
 sys.path.insert(0, lib_path)
 import global_config
 global_config.reset_texts()

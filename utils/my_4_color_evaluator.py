@@ -19,7 +19,7 @@ def calculate_similarity_for_permutation(args):
     current_similarity = sum(calculate_similarity_single(c1, c2) for c1, c2 in zip(shorter, perm))
     return current_similarity
 
-def evaluate_color_matching(generation_code: str, golden_code: str) -> Dict[str, float]:
+def evaluate_color_matching(generation_code: str, golden_code: str, temp_save_dir_name: str = None) -> Dict[str, float]:
     """评估生成的图表代码和标准代码之间的颜色匹配程度
     
     Args:
@@ -41,8 +41,14 @@ def evaluate_color_matching(generation_code: str, golden_code: str) -> Dict[str,
     golden_code = add_delete_file_after_savefig(golden_code)
 
     # 创建临时文件
-    generation_code_temp_file = "temp_{}.py".format(str(uuid.uuid4())[:8])
-    golden_code_temp_file = "temp_{}.py".format(str(uuid.uuid4())[:8])
+    if temp_save_dir_name is None:
+        temp_save_dir = os.environ["PROJECT_PATH"]
+    else:
+        temp_save_dir = os.path.join(os.environ["PROJECT_PATH"], temp_save_dir_name)
+    os.makedirs(temp_save_dir, exist_ok=True)
+
+    generation_code_temp_file = os.path.join(temp_save_dir, "temp_{}.py".format(str(uuid.uuid4())[:8]))
+    golden_code_temp_file = os.path.join(temp_save_dir, "temp_{}.py".format(str(uuid.uuid4())[:8]))
     with open(generation_code_temp_file, 'w') as f:
         f.write(generation_code)
     with open(golden_code_temp_file, 'w') as f:
@@ -124,7 +130,7 @@ def evaluate_color_matching(generation_code: str, golden_code: str) -> Dict[str,
         return max(similarities)
 
     def get_prefix():
-        with open(os.environ["PROJECT_PATH"]+"/examples/reward_function/chartmimic_evaluator/color_evaluator_prefix.py", "r") as f:
+        with open(os.environ["PROJECT_PATH"]+"/utils/color_evaluator_prefix.py", "r") as f:
             prefix = f.read()
         return prefix
 

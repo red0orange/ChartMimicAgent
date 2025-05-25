@@ -35,23 +35,13 @@ class ChartMimicBenchmark:
         pass
 
 
-if __name__ == "__main__":
-    benchmark = ChartMimicBenchmark()
-    # print(benchmark.train_data)
-    # print(benchmark.test_data)
-
-    # results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250523_103208/langgraph_states.json"
-    results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250524_160704/baseline_states.json"
+def eval_json_results(results_path):
     results_dir = os.path.dirname(results_path)
     results = json.load(open(results_path, "r"))
 
-    # results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250523_103208/langgraph_states.npy"
-    # results = np.load(results_path, allow_pickle=True)
-
     all_eval_results = []
-    for result, data in tqdm(zip(results, benchmark.dataset), total=len(results)):
+    for result in tqdm(results, total=len(results)):
         cur_result = result
-        cur_data = data
 
         pred_success = cur_result["success"]
         if "data" in cur_result:
@@ -65,7 +55,7 @@ if __name__ == "__main__":
             })
             continue
 
-        gt_code = data["answer"]
+        gt_code = cur_result["gt_code"]
 
         # 做一点预处理
         pred_code = pred_code.replace("w_xaxis", "xaxis")
@@ -113,9 +103,7 @@ if __name__ == "__main__":
     json.dump(all_eval_results, open(os.path.join(results_dir, "all_eval_results.json"), "w"), indent=4)
 
 
-        
-        
-        
-        
-        
-        
+if __name__ == "__main__":
+    # results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250523_103208/langgraph_states.json"
+    results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250524_160704/baseline_states.json"
+    eval_json_results(results_path)

@@ -1,7 +1,74 @@
-# 备注
-核心代码：
-- vllm_start.sh 启动 vllm 服务，在跑 LangGraph 的系统前，需要启动 vllm 服务，也就是本地部署的大模型。可以看作是 Ollama 的替代品。
-- chart_coder_agent.py 是核心代码，定义了多智能体系统中的各个智能体，包括代码生成智能体、视觉智能体和代码执行智能体。
+# MultiTurnChartCoder
+
+## 项目说明
+本项目主要实现了以下内容：
+
+1. 复现 ChartMimic Benchmark
+   - 实现数据集的读取和评估（仅包含 Low-level 评估，因为 High-level 评估需要调用 GPT-4 API，成本较高）
+   - 基于 vLLM 本地部署 Qwen2.5-VL 模型进行测评
+   - 结果显示 Qwen2.5-VL 全面超越其他开源模型
+
+2. 复现 MatPlotAgent 方案
+   - 使用两个 VLM 模型（均采用 Qwen2.5-VL）
+   - 一个模型负责代码生成，另一个提供反馈
+   - 通过多轮迭代优化图表代码
+   - 实验效果：相比 Qwen2.5-VL Baseline 有所下降
+
+3. 复现 MageBench 方案
+   - 使用单个 VLM 模型
+   - 将执行后的代码结果反馈给模型
+   - 通过多轮迭代优化图表代码
+   - 实验效果：相比 Qwen2.5-VL Baseline 有明显提升
+
+## 实验结果
+![实验结果](./当前结果.png)
+
+## 代码文件说明
+- `vllm_start.sh`: 启动 vLLM 服务，用于本地部署大模型（可视为 Ollama 的替代品）
+- `chart_coder_agent.py`: MatPlotAgent 方案实现
+- `chart_coder_agent_multi_process.py`: MatPlotAgent 方案的多进程版本
+- `chart_coder_agent_single_vlm.py`: MageBench 方案实现
+- `chart_coder_agent_single_vlm_multi_process.py`: MageBench 方案的多进程版本
+- `chartmimic_benchmark.py`: ChartMimic 数据集的读取和评估
+
+## 快速开始（并没有封装好，代码里面需要手动修改路径之类的）
+1. 启动 vLLM 服务：
+```bash
+bash vllm_start.sh
+```
+
+2. 运行推理：
+```bash
+python chart_coder_agent_multi_process.py   # 在里面选择 MatPlotAgent 或者 MageBench 方案
+```
+
+3. 运行评估：
+```bash
+python chartmimic_benchmark.py
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # MultiTurnChartCoder (下面是 Cursor 自动生成的，可以大致看看)

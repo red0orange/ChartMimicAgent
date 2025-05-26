@@ -21,10 +21,10 @@
    - 实验效果：相比 Qwen2.5-VL Baseline 有明显提升
 
 cite:
-[1] Yang, Cheng, et al. "Chartmimic: Evaluating lmm's cross-modal reasoning capability via chart-to-code generation." arXiv preprint arXiv:2406.09961 (2024).
-[2] Zhao, Xuanle, et al. "ChartCoder: Advancing Multimodal Large Language Model for Chart-to-Code Generation." arXiv preprint arXiv:2501.06598 (2025).
-[3] Yang, Zhiyu, et al. "Matplotagent: Method and evaluation for llm-based agentic scientific data visualization." arXiv preprint arXiv:2402.11453 (2024).
-[4] Zhang, Miaosen, et al. "MageBench: Bridging Large Multimodal Models to Agents." arXiv preprint arXiv:2412.04531 (2024).
+- [1] Yang, Cheng, et al. "Chartmimic: Evaluating lmm's cross-modal reasoning capability via chart-to-code generation." arXiv preprint arXiv:2406.09961 (2024).
+- [2] Zhao, Xuanle, et al. "ChartCoder: Advancing Multimodal Large Language Model for Chart-to-Code Generation." arXiv preprint arXiv:2501.06598 (2025).
+- [3] Yang, Zhiyu, et al. "Matplotagent: Method and evaluation for llm-based agentic scientific data visualization." arXiv preprint arXiv:2402.11453 (2024).
+- [4] Zhang, Miaosen, et al. "MageBench: Bridging Large Multimodal Models to Agents." arXiv preprint arXiv:2412.04531 (2024).
 
 
 ## 实验结果

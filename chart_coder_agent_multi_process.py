@@ -4,22 +4,27 @@ import multiprocessing as mp
 from typing import List, Dict, Any
 import traceback
 import json
+from functools import partial
 
 import numpy as np
 
 from chart_coder_agent import generate_chart_code
+from chart_coder_agent_single_vlm import generate_chart_code as generate_chart_code_single_vlm
 from chartmimic_benchmark import ChartMimicBenchmark
 
 cur_file_dir = os.path.dirname(os.path.abspath(__file__))
 
-def process_single_item(data: Dict[str, Any]) -> Dict[str, Any]:
+def process_single_item(data: Dict[str, Any], method="single_vlm") -> Dict[str, Any]:
     """处理单个数据项的函数"""
     try:
         image = data["images"][0]
         user_query = data["problem"]
         gt_code = data["answer"]
 
-        result_state = generate_chart_code(user_query, image_path=image)
+        if method == "single_vlm":
+            result_state = generate_chart_code_single_vlm(user_query, image_path=image)
+        else:
+            result_state = generate_chart_code(user_query, image_path=image)
         return {
             "success": True,
             "data": result_state,
@@ -46,6 +51,9 @@ def save_results(results: List[Dict[str, Any]], save_path: str):
         json.dump(results, f, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
+    method = "single_vlm"
+    # method = "multi_vlm"
+
     # 创建保存目录
     save_dir = os.path.join(cur_file_dir, "results")
     os.makedirs(save_dir, exist_ok=True)
@@ -55,7 +63,7 @@ if __name__ == "__main__":
     save_name = "res_{}".format(time_str)
     save_path = os.path.join(save_dir, save_name)
     os.makedirs(save_path, exist_ok=True)
-    save_path = os.path.join(save_path, "langgraph_states.npy")
+    save_path = os.path.join(save_path, "langgraph_states_{}.npy".format(method))
 
     # 获取数据集
     chart_mimic_benchmark = ChartMimicBenchmark()
@@ -72,7 +80,7 @@ if __name__ == "__main__":
         total_items = len(dataset)
         
         # 使用imap来处理数据，这样可以实时获取结果
-        for i, result in enumerate(pool.imap(process_single_item, dataset)):
+        for i, result in enumerate(pool.imap(partial(process_single_item, method=method), dataset)):
             results.append(result)
             
             # 每处理10个数据项保存一次结果
@@ -94,7 +102,3 @@ if __name__ == "__main__":
         
         # 打印最后一个成功结果的信息（如果有）
         last_success = next((r["data"] for r in reversed(results) if r["success"]), None)
-        if last_success:
-            print(f"\n最后一个成功结果的代码:\n{last_success['code']}")
-            print(f"迭代次数: {last_success['iterations']}")
-            print(f"反馈历史:\n{last_success['feedback']}")

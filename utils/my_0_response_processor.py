@@ -62,7 +62,7 @@ def execute_llm_code(code, output_dir):
     code = (
         "try:\n    "
         + indented_code
-        + '\nexcept Exception as e:\n    exit(100)\nplt.savefig("{}")\nplt.savefig("{}")'.format(
+        + '\nexcept Exception as e:\n    print("Error: " + str(e))\n    exit(100)\nplt.savefig("{}")\nplt.savefig("{}")'.format(
             output_pdf_file, output_png_file
         )
     )
@@ -75,12 +75,12 @@ def execute_llm_code(code, output_dir):
         result = subprocess.run(["python3", output_file], capture_output=True, text=True)
         if result.returncode != 0:
             success = False
-            err_msg = result.stderr
+            err_msg = result.stderr if result.stderr else result.stdout
         else:
             success = True
     except Exception as e:
         success = False
-        print(f"Exception occurred: {str(e)}")
+        err_msg = f"执行过程中发生异常: {str(e)}"
     finally:
         # 清理临时文件
         if os.path.exists(output_file):

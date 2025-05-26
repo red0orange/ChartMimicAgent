@@ -128,6 +128,9 @@ def eval_json_results(results_path: str, max_workers: int = 4):
                     "legend_matching_result": {"precision": 0, "recall": 0, "f1": 0},
                     "color_matching_result": {"precision": 0, "recall": 0, "f1": 0}
                 })
+            # 定期保存结果
+            if len(all_eval_results) % 100 == 0:
+                json.dump(all_eval_results, open(os.path.join(results_dir, "all_eval_results_{}.json".format(len(all_eval_results))), "w"), indent=4)
 
     # 保存结果
     json.dump(all_eval_results, open(os.path.join(results_dir, "all_eval_results.json"), "w"), indent=4)
@@ -181,5 +184,12 @@ if __name__ == "__main__":
     # results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250524_232031/langgraph_states.json"
     # eval_json_results(results_path)
     # 评估结果导出为 metrics
-    results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250524_232031/all_eval_results.json"
+    # results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250524_232031/all_eval_results.json"
+    # export_final_metrics(results_path)
+
+    # # 评估
+    # results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250525_184427/langgraph_states_single_vlm.json"
+    # eval_json_results(results_path)
+    # 评估结果导出为 metrics
+    results_path = "/home/hdh/Projects/MultiTurnChartCoder/results/res_20250525_184427/all_eval_results.json"
     export_final_metrics(results_path)

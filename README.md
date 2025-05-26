@@ -47,6 +47,11 @@ python chart_coder_agent_multi_process.py   # 在里面选择 MatPlotAgent 或�
 python chartmimic_benchmark.py
 ```
 
+## 还可以补充的实验
+- [ ] Qwen2.5-VL 的 Multi-turn 问答效果可能不是最好的，尝试让每次迭代解耦，即每次迭代输入上一轮生成的代码、对应执行结果、和要求的 GT 图像，然后生成新的代码，这样可以使用 Qwen2.5-VL 的单轮问答能力，而不是 Multi-turn 问答能力
+- [ ] 当前 MatplotAgent 和 MageBench 方案，我只测试了迭代一轮的情况，可以补充迭代多轮的情况
+- [ ] 分析为什么 MatplotAgent 相比于 Baseline 效果下降
+
 
 
 

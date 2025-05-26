@@ -129,8 +129,8 @@ def eval_json_results(results_path: str, max_workers: int = 4):
                     "color_matching_result": {"precision": 0, "recall": 0, "f1": 0}
                 })
             # 定期保存结果
-            if len(all_eval_results) % 100 == 0:
-                json.dump(all_eval_results, open(os.path.join(results_dir, "all_eval_results_{}.json".format(len(all_eval_results))), "w"), indent=4)
+            if len(all_eval_results) % 4 == 0:
+                json.dump(all_eval_results, open(os.path.join(results_dir, "all_eval_results.json"), "w"), indent=4)
 
     # 保存结果
     json.dump(all_eval_results, open(os.path.join(results_dir, "all_eval_results.json"), "w"), indent=4)
